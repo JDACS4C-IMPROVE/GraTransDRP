@@ -53,6 +53,7 @@ def load_drug_list():
     drugs = list(set(drugs))
     return drugs
 
+
 def write_drug_cid():
     drugs = load_drug_list()
     drug_id = []
@@ -78,6 +79,7 @@ def write_drug_cid():
     wr = csv.writer(outputfile)
     wr.writerow(unknow_drug)
 
+
 def cid_from_other_source():
     """
     some drug can not be found in pychem, so I try to find some cid manually.
@@ -96,6 +98,7 @@ def cid_from_other_source():
     unknow_drug = open(folder + "unknow_drug_by_pychem.csv").readline().split(",")
     drug_cid_dict = {k:v for k,v in cid_dict.iteritems() if k in unknow_drug and not is_not_float([v])}
     return drug_cid_dict
+
 
 def load_cid_dict():
     reader = csv.reader(open(folder + "pychem_cid.csv"))
@@ -136,16 +139,19 @@ def atom_features(atom):
                     one_of_k_encoding_unk(atom.GetImplicitValence(), [0, 1, 2, 3, 4, 5, 6,7,8,9,10]) +
                     [atom.GetIsAromatic()])
 
+
 def one_of_k_encoding(x, allowable_set):
     if x not in allowable_set:
         raise Exception("input {0} not in allowable set{1}:".format(x, allowable_set))
     return list(map(lambda s: x == s, allowable_set))
+
 
 def one_of_k_encoding_unk(x, allowable_set):
     """Maps inputs not in the allowable set to the last element."""
     if x not in allowable_set:
         x = allowable_set[-1]
     return list(map(lambda s: x == s, allowable_set))
+
 
 def smile_to_graph(smile):
     mol = Chem.MolFromSmiles(smile)
@@ -166,6 +172,7 @@ def smile_to_graph(smile):
         edge_index.append([e1, e2])
         
     return c_size, features, edge_index
+
 
 def load_drug_smile():
     reader = csv.reader(open(folder + "drug_smiles.csv"))
@@ -191,6 +198,7 @@ def load_drug_smile():
         smile_graph[smile] = g
     
     return drug_dict, drug_smile, smile_graph
+
 
 def save_cell_mut_matrix():
     f = open(folder + "PANCANCER_Genetic_feature.csv")
@@ -354,6 +362,7 @@ def save_cell_oge_matrix():
     #print(cell_dict['910927'][23])
     return cell_dict, cell_feature
 
+
 def train(model, device, train_loader, optimizer, epoch, log_interval, model_st):
     print('Training on {} samples...'.format(len(train_loader.dataset)))
     model.train()
@@ -383,6 +392,7 @@ def train(model, device, train_loader, optimizer, epoch, log_interval, model_st)
                                                                            100. * batch_idx / len(train_loader),
                                                                            loss.item()))
     return sum(avg_loss)/len(avg_loss)
+
 
 def predicting(model, device, loader, model_st):
     model.eval()
@@ -418,7 +428,9 @@ class DataBuilder(Dataset):
     def __len__(self):
         return self.len
 
+
 def save_mix_drug_cell_matrix(choice):
+    import ipdb; ipdb.set_trace()
     f = open(folder + "PANCANCER_IC.csv")
     reader = csv.reader(f)
     next(reader)
@@ -427,8 +439,6 @@ def save_mix_drug_cell_matrix(choice):
     cell_dict_meth, cell_feature_meth = save_cell_meth_matrix()
     cell_dict_ge, cell_feature_ge = save_cell_oge_matrix()
     # print(cell_feature_mut.shape)
-
-    
 
     # print(cell_feature_ge.shape)
     drug_dict, drug_smile, smile_graph = load_drug_smile()
@@ -515,7 +525,6 @@ def save_mix_drug_cell_matrix(choice):
     xc_mut_val = xc_mut[size:size1]
     xc_mut_test = xc_mut[size1:]
     
-    
     y_train = y[:size]
     y_val = y[size:size1]
     y_test = y[size1:]
@@ -523,14 +532,22 @@ def save_mix_drug_cell_matrix(choice):
     dataset = 'GDSC'
     print('preparing ', dataset + '_train.pt in pytorch format!')
 
-    train_data = TestbedDataset(root='data', dataset=dataset+'_train_mix', xd=xd_train, xt_ge=xc_ge_train, xt_meth=xc_meth_train, xt_mut=xc_mut_train, y=y_train, smile_graph=smile_graph)
-    val_data = TestbedDataset(root='data', dataset=dataset+'_val_mix', xd=xd_val, xt_ge=xc_ge_val, xt_meth=xc_meth_val,xt_mut=xc_mut_val, y=y_val, smile_graph=smile_graph)
-    test_data = TestbedDataset(root='data', dataset=dataset+'_test_mix', xd=xd_test, xt_ge=xc_ge_test, xt_meth=xc_meth_test, xt_mut=xc_mut_test, y=y_test, smile_graph=smile_graph)
+    train_data = TestbedDataset(root='data', dataset=dataset+'_train_mix',
+                                xd=xd_train, xt_ge=xc_ge_train, xt_meth=xc_meth_train,
+                                xt_mut=xc_mut_train, y=y_train, smile_graph=smile_graph)
+    val_data = TestbedDataset(root='data', dataset=dataset+'_val_mix', xd=xd_val,
+                              xt_ge=xc_ge_val, xt_meth=xc_meth_val,xt_mut=xc_mut_val,
+                              y=y_val, smile_graph=smile_graph)
+    test_data = TestbedDataset(root='data', dataset=dataset+'_test_mix', xd=xd_test,
+                               xt_ge=xc_ge_test, xt_meth=xc_meth_test, xt_mut=xc_mut_test,
+                               y=y_test, smile_graph=smile_graph)
     print("build data complete")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='prepare dataset to train model')
-    parser.add_argument('--choice', type=int, required=True, default=0, help='0.KernelPCA, 1.PCA, 2.Isomap')
+    parser.add_argument('--choice', type=int, required=True, default=0,
+                        help='0.KernelPCA, 1.PCA, 2.Isomap')
     args = parser.parse_args()
     choice = args.choice
     save_mix_drug_cell_matrix(choice)

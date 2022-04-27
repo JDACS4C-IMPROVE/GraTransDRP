@@ -19,6 +19,7 @@ from utils import *
 import datetime
 import argparse
 
+
 # training function at each epoch
 def train(model, device, train_loader, optimizer, epoch, log_interval, model_st):
     print('Training on {} samples...'.format(len(train_loader.dataset)))
@@ -53,6 +54,7 @@ def train(model, device, train_loader, optimizer, epoch, log_interval, model_st)
                                                                            loss.item()))
     return sum(avg_loss)/len(avg_loss)
 
+
 def predicting(model, device, loader, model_st):
     model.eval()
     total_preds = torch.Tensor()
@@ -75,8 +77,8 @@ def predicting(model, device, loader, model_st):
             total_labels = torch.cat((total_labels, data.y.view(-1, 1).cpu()), 0)
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
-def main(modeling, train_batch, val_batch, test_batch, lr, num_epoch, log_interval, cuda_name):
 
+def main(modeling, train_batch, val_batch, test_batch, lr, num_epoch, log_interval, cuda_name):
     print('Learning rate: ', lr)
     print('Epochs: ', num_epoch)
     for model in modeling:
@@ -115,13 +117,17 @@ def main(modeling, train_batch, val_batch, test_batch, lr, num_epoch, log_interv
             result_file_name = 'result_' + model_st + '_' + dataset +  '.csv'
             loss_fig_name = 'model_' + model_st + '_' + dataset + '_loss'
             pearson_fig_name = 'model_' + model_st + '_' + dataset + '_pearson'
+
+            import pdb; pdb.set_trace()
             for epoch in range(num_epoch):
-                train_loss = train(model, device, train_loader, optimizer, epoch+1, log_interval, model_st)
+                train_loss = train(model, device, train_loader, optimizer, epoch+1,
+                                   log_interval, model_st)
                 G,P = predicting(model, device, val_loader, model_st)
                 ret = [rmse(G,P),mse(G,P),pearson(G,P),spearman(G,P)]
                             
                 G_test,P_test = predicting(model, device, test_loader, model_st)
-                ret_test = [rmse(G_test,P_test),mse(G_test,P_test),pearson(G_test,P_test),spearman(G_test,P_test)]
+                ret_test = [rmse(G_test,P_test), mse(G_test,P_test),
+                            pearson(G_test,P_test), spearman(G_test,P_test)]
 
                 train_losses.append(train_loss)
                 val_losses.append(ret[1])
@@ -137,26 +143,38 @@ def main(modeling, train_batch, val_batch, test_batch, lr, num_epoch, log_interv
                     best_epoch = epoch+1
                     best_mse = ret[1]
                     best_pearson = ret[2]
-                    print(' rmse improved at epoch ', best_epoch, '; best_mse:', best_mse,model_st,dataset)
+                    print(' rmse improved at epoch ', best_epoch, '; best_mse:',
+                          best_mse,model_st,dataset)
                 else:
-                    print(' no improvement since epoch ', best_epoch, '; best_mse, best pearson:', best_mse, best_pearson, model_st, dataset)
+                    print(' no improvement since epoch ', best_epoch,
+                          '; best_mse, best pearson:', best_mse, best_pearson, model_st, dataset)
             draw_loss(train_losses, val_losses, loss_fig_name)
             draw_pearson(val_pearsons, pearson_fig_name)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train model')
-    parser.add_argument('--model', type=int, required=False, default=0,     help='0: Transformer_ge_mut_meth, 1: Transformer_ge_mut, 2: Transformer_meth_mut, 3: Transformer_meth_ge, 4: Transformer_ge, 5: Transformer_mut, 6: Transformer_meth')
-    parser.add_argument('--train_batch', type=int, required=False, default=32,  help='Batch size training set')
-    parser.add_argument('--val_batch', type=int, required=False, default=32, help='Batch size validation set')
-    parser.add_argument('--test_batch', type=int, required=False, default=32, help='Batch size test set')
+    parser.add_argument('--model', type=int, required=False, default=0,
+                        help='0: Transformer_ge_mut_meth, 1: Transformer_ge_mut, 2: Transformer_meth_mut, 3: Transformer_meth_ge, 4: Transformer_ge, 5: Transformer_mut, 6: Transformer_meth')
+    parser.add_argument('--train_batch', type=int, required=False, default=32,
+                        help='Batch size training set')
+    parser.add_argument('--val_batch', type=int, required=False, default=32,
+                        help='Batch size validation set')
+    parser.add_argument('--test_batch', type=int, required=False, default=32,
+                        help='Batch size test set')
     parser.add_argument('--lr', type=float, required=False, default=1e-4, help='Learning rate')
-    parser.add_argument('--num_epoch', type=int, required=False, default=200, help='Number of epoch')
-    parser.add_argument('--log_interval', type=int, required=False, default=20, help='Log interval')
+    parser.add_argument('--num_epoch', type=int, required=False, default=200,
+                        help='Number of epoch')
+    parser.add_argument('--log_interval', type=int, required=False, default=20,
+                        help='Log interval')
     parser.add_argument('--cuda_name', type=str, required=False, default="cuda:0", help='Cuda')
 
     args = parser.parse_args()
 
-    modeling = [GAT_GCN_Transformer_meth_ge_mut, GAT_GCN_Transformer_ge, GAT_GCN_Transformer_meth, GAT_GCN_Transformer_meth_ge, GAT_GCN_Transformer_ge_only, GAT_GCN_Transformer, GAT_GCN_Transformer_meth_only][args.model]
+    modeling = [GAT_GCN_Transformer_meth_ge_mut, GAT_GCN_Transformer_ge,
+                GAT_GCN_Transformer_meth, GAT_GCN_Transformer_meth_ge,
+                GAT_GCN_Transformer_ge_only, GAT_GCN_Transformer,
+                GAT_GCN_Transformer_meth_only][args.model]
     model = [modeling]
     train_batch = args.train_batch
     val_batch = args.val_batch
