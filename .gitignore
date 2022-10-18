@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IMPROVE
+list_cell_mix*
+list_drug_mix*
+drug_dict
+mut_dict
+data/
+data/processed
+results/
